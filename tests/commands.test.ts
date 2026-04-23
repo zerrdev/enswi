@@ -8,6 +8,7 @@ import { runList } from '../src/commands/list';
 import { runVersion } from '../src/commands/version';
 import { runAdd } from '../src/commands/add';
 import { runRemove } from '../src/commands/remove';
+import { runSetup } from '../src/commands/setup';
 
 let tmpDir: string;
 let origAppdata: string | undefined;
@@ -133,5 +134,41 @@ describe('runRemove', () => {
   it('throws if key not found in group', () => {
     writeConfig({ g: { K1: 'v1' } });
     expect(() => runRemove('g', 'MISSING')).toThrow('Key "MISSING" not found');
+  });
+});
+
+describe('runSetup', () => {
+  it('appends wrapper to bash profile file', () => {
+    const profilePath = path.join(tmpDir, '.bashrc');
+    fs.writeFileSync(profilePath, '# existing content\n');
+    runSetup('bash', profilePath);
+    const content = fs.readFileSync(profilePath, 'utf-8');
+    expect(content).toContain('# existing content');
+    expect(content).toContain('eval "$(command enswi "$@")"');
+  });
+
+  it('skips if wrapper already present', () => {
+    const profilePath = path.join(tmpDir, '.bashrc');
+    runSetup('bash', profilePath);
+    const content1 = fs.readFileSync(profilePath, 'utf-8');
+    runSetup('bash', profilePath);
+    const content2 = fs.readFileSync(profilePath, 'utf-8');
+    expect(content1).toBe(content2);
+  });
+
+  it('creates profile file if it does not exist', () => {
+    const profilePath = path.join(tmpDir, '.bashrc');
+    expect(fs.existsSync(profilePath)).toBe(false);
+    runSetup('bash', profilePath);
+    expect(fs.existsSync(profilePath)).toBe(true);
+    const content = fs.readFileSync(profilePath, 'utf-8');
+    expect(content).toContain('eval "$(command enswi "$@")"');
+  });
+
+  it('appends powershell wrapper', () => {
+    const profilePath = path.join(tmpDir, 'profile.ps1');
+    runSetup('powershell', profilePath);
+    const content = fs.readFileSync(profilePath, 'utf-8');
+    expect(content).toContain('Invoke-Expression');
   });
 });

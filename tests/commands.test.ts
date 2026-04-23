@@ -6,6 +6,8 @@ import { loadConfig } from '../src/config';
 import { runSet } from '../src/commands/set';
 import { runList } from '../src/commands/list';
 import { runVersion } from '../src/commands/version';
+import { runAdd } from '../src/commands/add';
+import { runRemove } from '../src/commands/remove';
 
 let tmpDir: string;
 let origAppdata: string | undefined;
@@ -85,5 +87,51 @@ describe('runVersion', () => {
   it('returns version string', () => {
     const output = runVersion();
     expect(output).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+});
+
+describe('runAdd', () => {
+  it('adds a var to an existing group', () => {
+    const configPath = writeConfig({ mygroup: { K1: 'v1' } });
+    runAdd('mygroup', 'NEW_KEY', 'new_val');
+    const config = loadConfig(configPath);
+    expect(config.groups['mygroup']['K1']).toBe('v1');
+    expect(config.groups['mygroup']['NEW_KEY']).toBe('new_val');
+  });
+
+  it('creates a new group if it does not exist', () => {
+    writeConfig({});
+    const configPath = path.join(tmpDir, 'enswi', 'config.yml');
+    runAdd('fresh', 'KEY', 'val');
+    const config = loadConfig(configPath);
+    expect(config.groups['fresh']).toEqual({ KEY: 'val' });
+  });
+
+  it('overwrites existing var in group', () => {
+    writeConfig({ g: { K: 'old' } });
+    const configPath = path.join(tmpDir, 'enswi', 'config.yml');
+    runAdd('g', 'K', 'new');
+    const config = loadConfig(configPath);
+    expect(config.groups['g']['K']).toBe('new');
+  });
+});
+
+describe('runRemove', () => {
+  it('removes a var from a group', () => {
+    writeConfig({ g: { K1: 'v1', K2: 'v2' } });
+    const configPath = path.join(tmpDir, 'enswi', 'config.yml');
+    runRemove('g', 'K1');
+    const config = loadConfig(configPath);
+    expect(config.groups['g']).toEqual({ K2: 'v2' });
+  });
+
+  it('throws if group not found', () => {
+    writeConfig({});
+    expect(() => runRemove('nope', 'K')).toThrow('Group "nope" not found');
+  });
+
+  it('throws if key not found in group', () => {
+    writeConfig({ g: { K1: 'v1' } });
+    expect(() => runRemove('g', 'MISSING')).toThrow('Key "MISSING" not found');
   });
 });

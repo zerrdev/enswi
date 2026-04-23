@@ -7,19 +7,15 @@ const WRAPPER_MARKER = '# enswi wrapper';
 const wrappers: Record<ShellType, string> = {
   bash: [
     WRAPPER_MARKER,
-    'enswi() { eval "$(command enswi "$@")"; }',
+    'enswi() { if [ "$1" = "load" ]; then eval "$(command enswi "$@")"; else command enswi "$@"; fi; }',
   ].join('\n'),
   zsh: [
     WRAPPER_MARKER,
-    'enswi() { eval "$(command enswi "$@")"; }',
+    'enswi() { if [ "$1" = "load" ]; then eval "$(command enswi "$@")"; else command enswi "$@"; fi; }',
   ].join('\n'),
   powershell: [
     WRAPPER_MARKER,
-    'function enswi { Invoke-Expression (& command enswi @args | Out-String) }',
-  ].join('\n'),
-  cmd: [
-    '@echo off',
-    'for /f "delims=" %%i in (\'node "%~dp0enswi-cli.js" %*\') do %%i',
+    'function enswi { if ($args[0] -eq "load") { $o = & (Get-Command -CommandType Application enswi | Select-Object -First 1).Source @args; if ($o) { Invoke-Expression ($o -join "`n") } } else { & (Get-Command -CommandType Application enswi | Select-Object -First 1).Source @args } }',
   ].join('\n'),
 };
 
@@ -36,11 +32,10 @@ export function getProfilePaths(shell: ShellType): string[] {
       return [path.join(home, '.zshrc')];
     case 'powershell': {
       const docs = process.env.USERPROFILE || home;
-      return [path.join(docs, 'Documents', 'PowerShell', 'Microsoft.PowerShell_profile.ps1')];
-    }
-    case 'cmd': {
-      const appdata = process.env.APPDATA || path.join(home, 'AppData', 'Roaming');
-      return [path.join(appdata, 'enswi', 'enswi.cmd')];
+      return [
+        path.join(docs, 'Documents', 'PowerShell', 'Microsoft.PowerShell_profile.ps1'),
+        path.join(docs, 'Documents', 'WindowsPowerShell', 'Microsoft.PowerShell_profile.ps1'),
+      ];
     }
   }
 }

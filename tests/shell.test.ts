@@ -17,10 +17,6 @@ describe('detectShell', () => {
       .toBe('powershell');
   });
 
-  it('detects cmd from COMSPEC ending in cmd.exe', () => {
-    expect(detectShell({ COMSPEC: 'C:\\Windows\\System32\\cmd.exe' })).toBe('cmd');
-  });
-
   it('defaults to bash when nothing matches', () => {
     expect(detectShell({})).toBe('bash');
   });
@@ -47,11 +43,6 @@ describe('formatVars', () => {
     expect(out).toBe("$env:API_KEY = 'secret123'\n$env:BASE_URL = 'https://api.example.com'");
   });
 
-  it('formats for cmd', () => {
-    const out = formatVars(vars, 'cmd');
-    expect(out).toBe('set API_KEY=secret123\nset BASE_URL=https://api.example.com');
-  });
-
   it('escapes special chars in values', () => {
     const specialVars = { PATH_VAR: '$HOME/path' };
     expect(formatVars(specialVars, 'bash')).toContain('\\$HOME/path');
@@ -69,11 +60,7 @@ describe('getWrapper', () => {
   });
 
   it('returns powershell wrapper string', () => {
-    expect(getWrapper('powershell')).toContain('Invoke-Expression');
-  });
-
-  it('returns cmd wrapper string', () => {
-    expect(getWrapper('cmd')).toContain('for /f');
+    expect(getWrapper('powershell')).toContain('Get-Command -CommandType Application');
   });
 });
 

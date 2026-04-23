@@ -1,0 +1,16 @@
+# enswi sample config
+# Copy to:
+#   Windows: %APPDATA%\enswi\config.yml
+#   Unix:    ~/.config/enswi/config.yml
+#
+# Usage:
+#   enswi setup          # Install shell wrapper (one-time)
+#   enswi example-group  # Set env vars from group "example-group"
+
+groups:
+  example-group:
+    envvar1: value11
+    envvar2: value12
+  another-group:
+    envvar2: value13
+    envvar4: value14

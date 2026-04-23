@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { escapeBash, escapePowershell, escapeCmd } from '../src/escape';
+import { escapeBash, escapePowershell } from '../src/escape';
 
 describe('escapeBash', () => {
   it('passes through simple strings', () => {
@@ -42,19 +42,5 @@ describe('escapePowershell', () => {
 
   it('escapes dollar signs with backtick', () => {
     expect(escapePowershell('$env:PATH')).toBe('`$env:PATH');
-  });
-});
-
-describe('escapeCmd', () => {
-  it('passes through simple strings', () => {
-    expect(escapeCmd('hello')).toBe('hello');
-  });
-
-  it('escapes percent signs by doubling', () => {
-    expect(escapeCmd('%PATH%')).toBe('%%PATH%%');
-  });
-
-  it('does not escape other characters', () => {
-    expect(escapeCmd('C:\\Users\\foo')).toBe('C:\\Users\\foo');
   });
 });

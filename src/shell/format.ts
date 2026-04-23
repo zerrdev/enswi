@@ -1,5 +1,5 @@
 import type { ShellType } from './detect';
-import { escapeBash, escapePowershell, escapeCmd } from '../escape';
+import { escapeBash, escapePowershell } from '../escape';
 
 export function formatVars(vars: Record<string, string>, shell: ShellType): string {
   const entries = Object.entries(vars);
@@ -9,7 +9,5 @@ export function formatVars(vars: Record<string, string>, shell: ShellType): stri
       return entries.map(([k, v]) => `export ${k}="${escapeBash(v)}"`).join('\n');
     case 'powershell':
       return entries.map(([k, v]) => `$env:${k} = '${escapePowershell(v)}'`).join('\n');
-    case 'cmd':
-      return entries.map(([k, v]) => `set ${k}=${escapeCmd(v)}`).join('\n');
   }
 }

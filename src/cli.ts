@@ -14,7 +14,7 @@ import { getProfilePaths } from './shell/wrappers';
 
 function getShell(option?: string): ShellType {
   if (option) {
-    const valid: ShellType[] = ['bash', 'zsh', 'powershell', 'cmd'];
+    const valid: ShellType[] = ['bash', 'zsh', 'powershell'];
     if (!valid.includes(option as ShellType)) {
       console.error(`Invalid shell "${option}". Valid options: ${valid.join(', ')}`);
       process.exit(1);
@@ -25,6 +25,13 @@ function getShell(option?: string): ShellType {
 }
 
 const program = new Command();
+
+// All commander output (help, version, errors) goes to stderr.
+// Only the set command uses console.log() for stdout (to be eval'd by the wrapper).
+program.configureOutput({
+  writeOut: (str: string) => process.stderr.write(str),
+  writeErr: (str: string) => process.stderr.write(str),
+});
 
 program
   .name('enswi')
@@ -39,7 +46,7 @@ program
   .action((opts) => {
     const shells: ShellType[] = opts.shell
       ? [opts.shell as ShellType]
-      : ['bash', 'zsh', 'powershell', 'cmd'];
+      : ['bash', 'zsh', 'powershell'];
     for (const shell of shells) {
       const paths = getProfilePaths(shell);
       for (const p of paths) {
@@ -98,14 +105,10 @@ program
     console.error(runVersion());
   });
 
-// Default action: treat first arg as group name
 program
-  .argument('[group]', 'group name to activate')
-  .action((group: string | undefined) => {
-    if (group === undefined) {
-      program.help();
-      return;
-    }
+  .command('load <group>')
+  .description('Activate a group (set env vars in current shell)')
+  .action((group: string) => {
     ensureConfigExists();
     const shell = getShell();
     try {

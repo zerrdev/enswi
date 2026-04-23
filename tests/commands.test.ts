@@ -169,6 +169,6 @@ describe('runSetup', () => {
     const profilePath = path.join(tmpDir, 'profile.ps1');
     runSetup('powershell', profilePath);
     const content = fs.readFileSync(profilePath, 'utf-8');
-    expect(content).toContain('Invoke-Expression');
+    expect(content).toContain('Get-Command -CommandType Application');
   });
 });

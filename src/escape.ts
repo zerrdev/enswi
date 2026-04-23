@@ -9,6 +9,3 @@ export function escapePowershell(value: string): string {
     .replace(/\$/g, '`$');
 }
 
-export function escapeCmd(value: string): string {
-  return value.replace(/%/g, '%%');
-}

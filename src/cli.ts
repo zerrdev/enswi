@@ -108,9 +108,10 @@ program
 program
   .command('load <group>')
   .description('Activate a group (set env vars in current shell)')
-  .action((group: string) => {
+  .option('--shell <shell>', 'override detected shell (bash, zsh, powershell)')
+  .action((group: string, opts: { shell?: string }) => {
     ensureConfigExists();
-    const shell = getShell();
+    const shell = getShell(opts.shell);
     try {
       const output = runSet(group, shell);
       // set command output goes to stdout (to be eval'd)

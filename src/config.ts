@@ -7,9 +7,35 @@ export interface EnswiConfig {
   groups: Record<string, Record<string, string>>;
 }
 
-function normalizeVars(vars: Record<string, unknown>): Record<string, string> {
+function normalizeVars(vars: unknown): Record<string, string> {
+  // Flatten YAML list-of-single-key-objects into a flat map:
+  //   [{FOO: "bar"}, {BAZ: "qux"}] → {FOO: "bar", BAZ: "qux"}
+  let entries: [string, unknown][];
+  if (Array.isArray(vars)) {
+    entries = vars.flatMap((item) => {
+      if (item && typeof item === 'object' && !Array.isArray(item)) {
+        return Object.entries(item as Record<string, unknown>);
+      }
+      throw new Error(
+        `Invalid group entry: expected KEY: VALUE, got ${typeof item}`,
+      );
+    });
+  } else if (vars && typeof vars === 'object') {
+    entries = Object.entries(vars as Record<string, unknown>);
+  } else {
+    throw new Error(
+      `Invalid group: expected a mapping of KEY: VALUE pairs, got ${typeof vars}`,
+    );
+  }
+
   const result: Record<string, string> = {};
-  for (const [key, val] of Object.entries(vars)) {
+  for (const [key, val] of entries) {
+    if (val !== null && typeof val === 'object') {
+      throw new Error(
+        `Invalid value for "${key}": expected a string, got ${JSON.stringify(val)}. ` +
+          `Use "KEY: VALUE" (not "KEY: {nested: value}").`,
+      );
+    }
     result[key] = String(val);
   }
   return result;
@@ -43,7 +69,7 @@ export function loadConfig(configPath: string): EnswiConfig {
   const groups: Record<string, Record<string, string>> = {};
   for (const [groupName, vars] of Object.entries(root.groups as Record<string, unknown>)) {
     if (vars && typeof vars === 'object') {
-      groups[groupName] = normalizeVars(vars as Record<string, unknown>);
+      groups[groupName] = normalizeVars(vars);
     }
   }
   return { groups };

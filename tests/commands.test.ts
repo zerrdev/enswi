@@ -82,6 +82,26 @@ describe('runList', () => {
     writeConfig({ existing: {} });
     expect(() => runList('nope')).toThrow('Group "nope" not found');
   });
+
+  it('handles YAML list-of-mappings format', () => {
+    // Write raw YAML with list syntax: - KEY: VALUE
+    process.env.APPDATA = tmpDir;
+    const dir = path.join(tmpDir, 'enswi');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, 'config.yml'),
+      [
+        'groups:',
+        '  cglm:',
+        '    - ANTHROPIC_BASE_URL: "https://example.com"',
+        '    - ANTHROPIC_MODEL: "GLM-5"',
+      ].join('\n'),
+      'utf-8',
+    );
+    const output = runList('cglm');
+    expect(output).toContain('ANTHROPIC_BASE_URL=https://example.com');
+    expect(output).toContain('ANTHROPIC_MODEL=GLM-5');
+  });
 });
 
 describe('runVersion', () => {
@@ -169,6 +189,8 @@ describe('runSetup', () => {
     const profilePath = path.join(tmpDir, 'profile.ps1');
     runSetup('powershell', profilePath);
     const content = fs.readFileSync(profilePath, 'utf-8');
-    expect(content).toContain('Get-Command -CommandType Application');
+    expect(content).toContain('Invoke-Expression');
+    expect(content).toContain('Get-Command -CommandType Application enswi');
+    expect(content).toContain('.Source');
   });
 });

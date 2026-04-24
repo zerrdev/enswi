@@ -11,6 +11,9 @@
     "test": "vitest run",
     "dev": "tsc --watch"
   },
+  "files": [
+    "dist"
+  ],
   "dependencies": {
     "commander": "^13.0.0",
     "yaml": "^2.7.0"

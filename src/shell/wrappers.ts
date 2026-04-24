@@ -15,7 +15,14 @@ const wrappers: Record<ShellType, string> = {
   ].join('\n'),
   powershell: [
     WRAPPER_MARKER,
-    'function enswi { if ($args[0] -eq "load") { $o = & (Get-Command -CommandType Application enswi | Select-Object -First 1).Source @args; if ($o) { Invoke-Expression ($o -join "`n") } } else { & (Get-Command -CommandType Application enswi | Select-Object -First 1).Source @args } }',
+    'function enswi {',
+    '  $__e = (Get-Command -CommandType Application enswi | Select-Object -First 1).Source',
+    '  if ($args[0] -eq "load") {',
+    '    Invoke-Expression (& $__e @args 2>$null | Out-String)',
+    '  } else {',
+    '    & $__e @args',
+    '  }',
+    '}',
   ].join('\n'),
 };
 
